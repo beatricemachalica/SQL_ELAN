@@ -86,7 +86,7 @@ SELECT *
 FROM notes_maths
 
 -- puis pour chaque numero_etudiant 1, 2, 3, 4
-SELECT AVG(note)
+SELECT AVG(note), numero_etudiant
 FROM notes_maths
 WHERE numero_etudiant = 1
 
@@ -191,7 +191,16 @@ FROM notes_maths
 -- LIVRAISON (NumP, NumU, NumF, Quantité)
 
 -- a) Ajouter un nouveau fournisseur avec les attributs de votre choix
+INSERT INTO fournisseur (Nom_F,Statut,Ville_F)
+ VALUES
+ ('Conforama', 'Grand', 'Mulhouse'),
+ ('Michelle', 'Petit', 'Cernay');
 
--- b) Supprimer tous les produits de couleur noire et de numéros compris entre 100 et 1999
+-- b) Supprimer tous les produits de couleur noire et dont le poids est > à 30
+DELETE FROM produits
+WHERE couleur = 'noir' AND poids > 30;
 
 -- c) Changer la ville du fournisseur 3 par Mulhouse
+UPDATE fournisseur
+SET Ville_F = REPLACE(Ville_F, 'Strasbourg', 'Mulhouse')
+WHERE Num_F = 3
