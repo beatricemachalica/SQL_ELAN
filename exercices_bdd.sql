@@ -36,6 +36,10 @@ Indochine Celebrations
 Sirkis Celebrations
 Muse Cats
 Hooper Cats
+-- autre méthode avec un alias :
+SELECT nom, titre_representation 
+FROM musicien m, representation r
+WHERE m.NUMERO_REPRESENTATION = r.NUMERO_REPRESENTATION
 
 -- Exo 1) d) Donner la liste des titres des représentations, les lieux et les tarifs pour la journée du 15/02/2021
 SELECT titre_representation, lieu, tarif 
@@ -45,6 +49,12 @@ AND representation.numero_representation = programmer.numero_representation
 -- Résultats
 titre_representation / lieu / tarif pour le 15/02/2021
 Celebrations Strasbourg 25
+
+-- autre méthode avec un alias :
+SELECT titre_representation, lieu, tarif 
+FROM representation r, programmer p
+WHERE p.DATE = '2021-02-15'
+AND r.NUMERO_REPRESENTATION = p.NUMERO_REPRESENTATION
 
 -- ********************************************************************************************************
 -- Exercice 2
@@ -57,57 +67,98 @@ Celebrations Strasbourg 25
 -- Affichez les résultats suivants avec une solution SQL :
 
 -- Exercice 2) a) Quel est le nombre total d'étudiants ?
+-- count() est une fonction d'agrégation
 SELECT COUNT(*) 
 FROM etudiant
 -- Résultats
 4
+-- correction : on rajoute un alias pour pouvoir réutiliser les données
+SELECT COUNT(numero_etudiant) AS NbEtudiants 
+FROM etudiant
 
 -- Exercice 2) b) Quelles sont, parmi l'ensemble des notes, la note la plus haute et la note la plus basse ?
-SELECT MAX(note)
-FROM evaluation
+SELECT MAX(e.NOTE), MIN(e.NOTE)
+FROM evaluation e
 -- Résultats
-20
--- --------------
-SELECT MIN(note)
-FROM evaluation
--- Résultats
-1
+note max / note min
+20 / 1
 
 -- Exercice 2) c) Quelles sont les moyennes de chaque étudiant dans chacune des matières ? (utilisez
--- CREATE VIEW)
-CREATE VIEW notes_maths AS
-SELECT note, numero_etudiant
-FROM evaluation, matiere
-WHERE matiere.code_mat = '1'
-AND matiere.code_mat = evaluation.code_mat
+-- CREATE VIEW) = une vue est une table virtuelle
 
--- pour voir le résultat du create view
-SELECT *
-FROM notes_maths
+-- on va créer une vue MOY
+-- si on a une fonction d'agrégation = group by
+CREATE VIEW MOY AS
+  SELECT numero_etudiant AS idEtudiant, m.code_mat AS Mat, AVG(note) AS moy_etu_mat
+  FROM evaluation e, matiere m
+  WHERE m.code_mat = e.code_mat
+  GROUP BY idEtudiant, Mat
 
--- puis pour chaque numero_etudiant 1, 2, 3, 4
-SELECT AVG(note), numero_etudiant
-FROM notes_maths
-WHERE numero_etudiant = 1
+SELECT CONCAT(nom, " ", prenom) AS identite, libelle_mat, ROUND(moy_etu_mat,2) AS moyenne
+FROM moy m, matiere ma, etudiant e
+WHERE m.idEtudiant = e.numero_etudiant
+AND ma.code_mat = m.Mat
+ORDER BY identite ASC, ma.libelle_mat
+-- Résultats
+identite / libelle_mat / moyenne
+Bochler Anthony / Biologie / 19.50
+Bochler Anthony / Français / 15
+Bochler Anthony / Histoire / 8.50
+Bochler Anthony / Maths / 14.50
+-- etc.
 
 -- Exercice 2) d) Quelles sont les moyennes par matière ? (cf. question c)
-SELECT AVG(note)
-FROM notes_maths
+SELECT libelle_mat, ROUND(AVG(moy_etu_mat),2) AS moyenne
+FROM matiere ma, moy m
+WHERE ma.code_mat = m.Mat
+GROUP BY m.Mat
 -- Résultats
-10.8
+libelle_mat / moyenne
+Maths / 10.88
+Français / 9.75
+Histoire / 12.75
+Biologie / 13.88
 
 -- Exercice 2) e) Quelle est la moyenne générale de chaque étudiant ? (utilisez CREATE VIEW + cf. question 3)
-CREATE VIEW MoyenneAlpha AS    
-SELECT Numéro_Etudiant, Nom, Prénom 
-FROM etudiant AS Etudiants
-    UNION
-    SELECT Numéro_Etudiant, Note, Code_Mat FROM evaluer AS Evaluation
+CREATE VIEW moygen AS
+SELECT CONCAT(nom, " ", prenom) AS identite, ROUND(SUM(m.moy_etu_mat * ma.coeff_mat)/ SUM(ma.coeff_mat),2) AS moy_gen_etu
+FROM moy m, matiere ma, etudiant e
+WHERE m.Mat = ma.code_mat
+AND e.numero_etudiant = m.idEtudiant
+GROUP BY identite
+ORDER BY moy_gen_etu desc
+
+SELECT identite, moy_gen_etu
+FROM moygen
+ORDER BY moy_gen_etu desc
+
+-- Résultats
+identite / moy_gen_etu
+Bochler Anthony / 15.29
+Machalica Béatrice / 13.67
+Schweitzer Mathieu / 13.42
+Goudowicz Marta / 5.25
 
 -- Exercice 2) f) Quelle est la moyenne générale de la promotion ? (cf. question e)
-
+SELECT ROUND(AVG(moy_gen_etu), 2) AS moyenne_promo
+FROM moygen
+-- Résultats
+moyenne_promo
+11.91
 -- Exercice 2) g) Quels sont les étudiants qui ont une moyenne générale supérieure ou égale à la moyenne
 -- générale de la promotion ? (cf. question e)
 
+-- on doit faire une sous requête
+SELECT identite, moy_gen_etu
+FROM moygen
+WHERE moy_gen_etu >= 
+	(SELECT AVG(moy_gen_etu)
+		FROM moygen)
+-- Résultats
+identite / moy_gen_etu
+Bochler Anthony / 15.29
+Machalica Béatrice / 13.67
+Schweitzer Mathieu / 13.42
 
 -- ********************************************************************************************************
 -- Exercice 3
@@ -163,6 +214,11 @@ AND delai > 20
 -- je sais pas si c'est faux ou pas
 
 -- f) Nombre d'articles référencés ?
+SELECT COUNT(*) AS NbArticles
+FROM articles
+-- Résultats
+NbArticles
+9
 
 -- g) Valeur du stock ?
 
@@ -179,16 +235,56 @@ AND delai > 20
 -- Donnez le résultat SQL des éléments suivants :
 
 -- a) Liste de tous les étudiants
+SELECT nom AS num_etudiant
+FROM etudiant
+-- Résultats
+nom_etudiant
+Bochler
+Heimburger
+Schmit
 
 -- b) Liste de tous les étudiants, classée par ordre alphabétique inverse
+SELECT nom
+FROM etudiant
+ORDER BY nom DESC
+-- Résultats
+nom_etudiant
+Schmit
+Heimburger
+Bochler
 
 -- c) Libellé et coefficient (exprimé en pourcentage) de chaque matière
+SELECT libelle, coef
+FROM matiere
+PAS FINIS
 
 -- d) Nom et prénom de chaque étudiant
+SELECT nom, prenom
+FROM etudiant
+-- Résultats
+nom / prenom
+Bochler / Anthony
+Heimburger / Bastien
+Schmit / Florence
 
--- e) Nom et prénom des étudiants domiciliés à Lyon
+-- e) Nom et prénom des étudiants domiciliés à Dettwiller
+SELECT nom, prenom
+FROM etudiant
+WHERE ville = "Dettwiller"
+-- Résultats
+nom / prenom
+Bochler Anthony
 
 -- f) Liste des notes supérieures ou égales à 10
+SELECT note
+FROM notation
+WHERE note >= 10
+-- Résultats
+19.00
+18.00
+18.00
+16.00
+-- etc.
 
 -- g) Liste des épreuves dont la date se situe entre le 1er janvier et le 30 juin 2014
 
