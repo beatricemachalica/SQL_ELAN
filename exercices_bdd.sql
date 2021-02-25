@@ -396,13 +396,30 @@ WHERE n.num_etudiant = et.num_etudiant
 AND e.num_epreuve = n.num_epreuve
 GROUP BY idEtudiant, m.code_matiere
 
+
 -- r) Moyennes des notes de chaque étudiant (indiquer le nom et le prénom), classées de la
 -- meilleure à la moins bonne
+SELECT n.num_etudiant AS idEtudiant, et.nom, et.prenom, m.code_matiere, round(AVG(note),2) AS moy_etu_mat
+FROM notation n, etudiant et, matiere m, epreuve e
+WHERE n.num_etudiant = et.num_etudiant
+AND e.num_epreuve = n.num_epreuve
+GROUP BY idEtudiant, m.code_matiere
+ORDER BY idEtudiant DESC
 
 -- s) Moyennes des notes pour les matières (indiquer le libellé) comportant plus d'une épreuve
+SELECT 
+FROM 
+WHERE 
+GROUP BY
+HAVING count(evaluation) >= 2
 
 -- t) Moyennes des notes obtenues aux épreuves (indiquer le numéro d'épreuve) où moins de 6
 -- étudiants ont été notés
+SELECT 
+FROM 
+WHERE 
+GROUP BY
+HAVING count(num_etudiant) < 6
 
 -- ********************************************************************************************************
 -- Exercice 5
