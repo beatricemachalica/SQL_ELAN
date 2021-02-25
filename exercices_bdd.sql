@@ -179,8 +179,7 @@ numéro / libellés
 -- b) Liste des articles dont le prix d'inventaire est compris entre 100 et 300 ?
 SELECT libelle
 FROM articles
-WHERE prix_invent < 300
-AND prix_invent > 100
+WHERE prix_invent BETWEEN 100 AND 300
 -- Résultats
 libellés
 diamant
@@ -208,10 +207,9 @@ stephane
 -- e) Noms et adresses des fournisseurs qui proposent des articles pour lesquels le délai
 -- d'approvisionnement est supérieur à 20 jours ?
 SELECT nom, adresse, ville
-FROM fournisseurs, acheter
-WHERE fournisseurs.num_fournisseur = acheter.num_fournisseur
+FROM fournisseurs f, acheter a
+WHERE f.num_fournisseur = a.num_fournisseur
 AND delai > 20
--- je sais pas si c'est faux ou pas
 
 -- f) Nombre d'articles référencés ?
 SELECT COUNT(*) AS NbArticles
@@ -221,13 +219,29 @@ NbArticles
 9
 
 -- g) Valeur du stock ?
+SELECT SUM(stock*prix_invent) AS valeurStock
+FROM articles
+-- Résultats
+valeurStock
+12553
 
--- h) Numéros et libellés des articles triés dans l'ordre décroissant des stocks ?
+-- h) Numéros, libellés et stock des articles triés dans l'ordre décroissant des stocks ?
+SELECT num_article, libelle, stock
+FROM articles
+ORDER BY stock desc
 
 -- i) Liste pour chaque article (numéro et libellé) du prix d'achat maximum, minimum et moyen ?
+SELECT a.num_article, libelle, max(prix_achat) as prixMax, min(prix_achat) as prixMin, avg(prix_achat) as prixMoyen
+FROM articles a, acheter ac
+WHERE a.num_article = ac.num_article
+GROUP BY libelle, a.num_article
 
 -- j) Délai moyen pour chaque fournisseur proposant au moins 2 articles ?
-
+SELECT f.nom AS nomFournisseur, AVG(delai) AS delaiMoyen
+FROM fournisseurs f, acheter a
+WHERE f.num_fournisseur = a.num_fournisseur
+GROUP BY f.nom
+HAVING count(a.num_article) >= 2
 
 -- ********************************************************************************************************
 -- Exercice 4
@@ -286,28 +300,101 @@ WHERE note >= 10
 16.00
 -- etc.
 
--- g) Liste des épreuves dont la date se situe entre le 1er janvier et le 30 juin 2014
+-- g) Liste des épreuves dont la date se situe entre deux dates au choix
+SELECT m.libelle, e.date_epreuve
+FROM matiere m, epreuve e
+WHERE m.code_matiere = e.code_matiere
+AND e.date_epreuve BETWEEN "2021-02-20" AND "2021-02-22"
+-- Résultats
+libelle / date_epreuve
+Maths / 2021-02-22
+Bio / 2021-02-21
+Biochimie / 2021-02-20
 
 -- h) Nom, prénom et ville des étudiants dont la ville contient la chaîne "ll" (LL)
+SELECT *
+FROM etudiant e
+WHERE ville LIKE '%ll%'
+-- Résultats
+1 / bochler / anthony / 1991-04-30 / corbeau / 67100 / Dettwiller
 
--- i) Prénoms des étudiants de nom Dupont, Durand ou Martin
+-- i) Prénoms des étudiants de nom Bochler, Durand ou Schmit
+SELECT e.prenom
+FROM etudiant e
+WHERE nom = "Bochler" OR prenom = "Durand" OR prenom = "Schmit"
+-- Résultats
+Anthony
 
 -- j) Somme des coefficients de toutes les matières
+SELECT SUM(coeff)
+FROM matiere
+-- Résultats
+16
 
 -- k) Nombre total d'épreuves
+SELECT COUNT(e.num_epreuve)
+FROM epreuve e
+-- Résultats
+5
 
 -- l) Nombre de notes indéterminées (NULL)
+SELECT count(note)
+FROM notation n
+WHERE n.note IS null
+-- Résultats
 
 -- m) Liste des épreuves (numéro, date et lieu) incluant le libellé de la matière
+SELECT e.num_epreuve AS IdEpreuve, e.date_epreuve, e.lieu, m.libelle
+FROM epreuve e, matiere m
+WHERE e.code_matiere = m.code_matiere
+-- Résultats
+IdEpreuve / date_epreuve / lieu / libelle
+1 / 2021 ... / Strasbourg / Maths
+2 / 2021 ... / Strasbourg / Bio
+3 / 2021 ... / Strasbourg / Biochimie
+4 / 2021 ... / Strasbourg / Info
+5 / 2021 ... / Strasbourg / Projet
 
 -- n) Liste des notes en précisant pour chacune le nom et le prénom de l'étudiant qui l'a obtenue
+SELECT n.note, n.num_etudiant, et.nom, et.prenom
+FROM notation n, epreuve e, matiere m, etudiant et
+WHERE n.num_epreuve = e.code_matiere
+AND e.code_matiere = m.code_matiere
+AND n.num_etudiant = et.num_etudiant
+-- Résultats
+note / num_etudiant / nom / prenom
+19.00 / 1 / Bochler / Anthony
+18.00 / 1 / Bochler / Anthony
+18.00 / 1 / Bochler / Anthony
+16.00 / 1 / Bochler / Anthony
+16.00 / 1 / Bochler / Anthony
+-- etc.
 
 -- o) Liste des notes en précisant pour chacune le nom et le prénom de l'étudiant qui l'a
 -- obtenue et le libellé de la matière concernée
+SELECT n.note, n.num_etudiant, et.nom, et.prenom, n.num_epreuve, m.libelle
+FROM notation n, epreuve e, matiere m, etudiant et
+WHERE n.num_epreuve = e.code_matiere
+AND e.code_matiere = m.code_matiere
+AND n.num_etudiant = et.num_etudiant
 
--- p) Nom et prénom des étudiants qui ont obtenu au moins une note égale à 20
+-- p) Nom et prénom des étudiants qui ont obtenu au moins une note égale à 19
+SELECT n.note, n.num_etudiant, et.nom, et.prenom, n.num_epreuve, m.libelle
+FROM notation n, epreuve e, matiere m, etudiant et
+WHERE n.num_epreuve = e.code_matiere
+AND e.code_matiere = m.code_matiere
+AND n.num_etudiant = et.num_etudiant
+AND n.note >= 19
+-- Résultats
+note / num_etudiant / nom / prenom / num_epreuve / libelle
+19.00 / 1 / Bochler / Anthony / 1 / Maths
 
 -- q) Moyennes des notes de chaque étudiant (indiquer le nom et le prénom)
+SELECT n.num_etudiant AS idEtudiant, et.nom, et.prenom, m.code_matiere, round(AVG(note),2) AS moy_etu_mat
+FROM notation n, etudiant et, matiere m, epreuve e
+WHERE n.num_etudiant = et.num_etudiant
+AND e.num_epreuve = n.num_epreuve
+GROUP BY idEtudiant, m.code_matiere
 
 -- r) Moyennes des notes de chaque étudiant (indiquer le nom et le prénom), classées de la
 -- meilleure à la moins bonne
