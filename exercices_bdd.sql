@@ -97,6 +97,11 @@ FROM notes_maths
 10.8
 
 -- Exercice 2) e) Quelle est la moyenne générale de chaque étudiant ? (utilisez CREATE VIEW + cf. question 3)
+CREATE VIEW MoyenneAlpha AS    
+SELECT Numéro_Etudiant, Nom, Prénom 
+FROM etudiant AS Etudiants
+    UNION
+    SELECT Numéro_Etudiant, Note, Code_Mat FROM evaluer AS Evaluation
 
 -- Exercice 2) f) Quelle est la moyenne générale de la promotion ? (cf. question e)
 
@@ -113,15 +118,49 @@ FROM notes_maths
 -- Affichez les résultats suivants avec une solution SQL :
 
 -- a) Numéros et libellés des articles dont le stock est inférieur à 10 ?
+SELECT num_article, libelle
+FROM articles
+WHERE stock < 10
+-- Résultats
+numéro / libellés
+8 / praliné
 
 -- b) Liste des articles dont le prix d'inventaire est compris entre 100 et 300 ?
+SELECT libelle
+FROM articles
+WHERE prix_invent < 300
+AND prix_invent > 100
+-- Résultats
+libellés
+diamant
 
 -- c) Liste des fournisseurs dont on ne connaît pas l'adresse ?
+SELECT nom, num_fournisseur
+FROM fournisseurs
+WHERE adresse IS NULL
+-- Résultats
+nom / num_fournisseur
+Meiher / 3
+
+-- ATTENTION : l’opérateur IS permet de filtrer les résultats qui contiennent la valeur NULL. 
+-- Cet opérateur est indispensable car la valeur NULL est une valeur inconnue 
+-- et ne peut par conséquent pas être filtrée par les opérateurs de comparaison 
+-- (cf. égal, inférieur, supérieur ou différent).
 
 -- d) Liste des fournisseurs dont le nom commence par "STE" ?
+SELECT nom
+FROM fournisseurs
+WHERE nom LIKE 'STE%'
+-- Résultats
+stephane
 
 -- e) Noms et adresses des fournisseurs qui proposent des articles pour lesquels le délai
 -- d'approvisionnement est supérieur à 20 jours ?
+SELECT nom, adresse, ville
+FROM fournisseurs, acheter
+WHERE fournisseurs.num_fournisseur = acheter.num_fournisseur
+AND delai > 20
+-- je sais pas si c'est faux ou pas
 
 -- f) Nombre d'articles référencés ?
 
