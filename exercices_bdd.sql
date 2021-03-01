@@ -249,7 +249,7 @@ HAVING count(a.num_article) >= 2
 -- Donnez le résultat SQL des éléments suivants :
 
 -- a) Liste de tous les étudiants
-SELECT nom AS num_etudiant
+SELECT *
 FROM etudiant
 -- Résultats
 nom_etudiant
@@ -268,9 +268,8 @@ Heimburger
 Bochler
 
 -- c) Libellé et coefficient (exprimé en pourcentage) de chaque matière
-SELECT libelle, coef
+SELECT libelle, coef*100/18
 FROM matiere
-PAS FINIS
 
 -- d) Nom et prénom de chaque étudiant
 SELECT nom, prenom
@@ -321,7 +320,7 @@ WHERE ville LIKE '%ll%'
 -- i) Prénoms des étudiants de nom Bochler, Durand ou Schmit
 SELECT e.prenom
 FROM etudiant e
-WHERE nom = "Bochler" OR prenom = "Durand" OR prenom = "Schmit"
+WHERE nom IN ("Bochler","Durand","Schmit") 
 -- Résultats
 Anthony
 
@@ -341,7 +340,6 @@ FROM epreuve e
 SELECT count(note)
 FROM notation n
 WHERE n.note IS null
--- Résultats
 
 -- m) Liste des épreuves (numéro, date et lieu) incluant le libellé de la matière
 SELECT e.num_epreuve AS IdEpreuve, e.date_epreuve, e.lieu, m.libelle
@@ -407,19 +405,20 @@ GROUP BY idEtudiant, m.code_matiere
 ORDER BY idEtudiant DESC
 
 -- s) Moyennes des notes pour les matières (indiquer le libellé) comportant plus d'une épreuve
-SELECT 
-FROM 
-WHERE 
-GROUP BY
-HAVING count(evaluation) >= 2
+SELECT libelle, AVG(note)
+FROM matiere m, notation n, epreuve e
+WHERE m.code_mat = e.code_mat
+AND n.num_epreuve = e.num_epreuve
+GROUP BY libelle
+HAVING count(DISTINCT e.num_epreuve) >= 2
 
 -- t) Moyennes des notes obtenues aux épreuves (indiquer le numéro d'épreuve) où moins de 6
 -- étudiants ont été notés
-SELECT 
-FROM 
-WHERE 
-GROUP BY
-HAVING count(num_etudiant) < 6
+SELECT n.num_epreuve, AVG(note)
+FROM notation n
+WHERE note IS NOT NULL
+GROUP BY n.num_epreuve
+HAVING count(*) < 6
 
 -- ********************************************************************************************************
 -- Exercice 5
@@ -435,6 +434,12 @@ INSERT INTO fournisseur (Nom_F,Statut,Ville_F)
  ('Conforama', 'Grand', 'Mulhouse'),
  ('Michelle', 'Petit', 'Cernay');
 
+--  autre solution mais attention à la clé qu'il faut indiquer ici !
+INSERT INTO fournisseur
+ VALUES
+ (45,'truc', 'Grand', 'Mulhouse'),
+ (46,'machin', 'Petit', 'Cernay');
+
 -- b) Supprimer tous les produits de couleur noire et dont le poids est > à 30
 DELETE FROM produits
 WHERE couleur = 'noir' AND poids > 30;
@@ -443,3 +448,8 @@ WHERE couleur = 'noir' AND poids > 30;
 UPDATE fournisseur
 SET Ville_F = REPLACE(Ville_F, 'Strasbourg', 'Mulhouse')
 WHERE Num_F = 3
+
+-- ou bien sans le REPLACE
+UPDATE fournisseur
+SET Ville_F = 'Strasbourg'
+WHERE Num_F = 8
