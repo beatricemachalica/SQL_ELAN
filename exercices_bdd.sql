@@ -453,3 +453,115 @@ WHERE Num_F = 3
 UPDATE fournisseur
 SET Ville_F = 'Strasbourg'
 WHERE Num_F = 8
+
+-- ********************************************************************************************************
+-- Exercice des Gaulois
+
+-- 1) Nombre de gaulois par lieu (trié par nombre de gaulois décroissant)
+SELECT COUNT(v.NOM) AS NombreGaulois, l.NOM_LIEU
+FROM villageois v, lieu l
+WHERE v.ID_LIEU = l.ID_LIEU
+GROUP BY v.ID_LIEU
+ORDER BY NombreGaulois
+
+-- 2) Nom des gaulois + spécialité + village
+SELECT v.NOM, s.NOM_SPECIALITE, l.NOM_LIEU
+FROM villageois v, specialite s, lieu l
+WHERE v.ID_LIEU = l.ID_LIEU
+AND s.ID_SPECIALITE = v.ID_SPECIALITE
+
+-- 3) Nom des spécialités avec nombre de gaulois par spécialité (trié par nombre de gaulois
+-- décroissant)
+SELECT COUNT(v.NOM) AS NombreGaulois, s.NOM_SPECIALITE
+FROM villageois v, specialite s
+WHERE v.ID_SPECIALITE = s.ID_SPECIALITE
+GROUP BY v.ID_SPECIALITE
+ORDER BY NombreGaulois DESC
+
+-- 4) Nom des batailles + lieu de la plus récente à la plus ancienne (dates au format jj/mm/aaaa)
+SELECT b.NOM_BATAILLE, l.NOM_LIEU
+FROM bataille b, lieu l
+WHERE l.ID_LIEU = b.ID_LIEU
+ORDER BY b.DATE_BATAILLE asc
+
+-- 5) Nom des potions + coût de réalisation de la potion (trié par coût décroissant)
+SELECT p.NOM_POTION, sum(i.COUT_INGREDIENT) AS cout
+FROM potion p, compose c, ingredient i
+WHERE p.ID_POTION = c.ID_POTION
+AND c.ID_INGREDIENT = i.ID_INGREDIENT
+GROUP BY p.NOM_POTION
+ORDER BY cout desc
+
+-- 6) Nom des ingrédients + coût + quantité de chaque ingrédient qui composent la potion 'Potion V'
+SELECT i.NOM_INGREDIENT, c.QTE, i.COUT_INGREDIENT
+FROM ingredient i, potion p, compose c
+WHERE p.NOM_POTION = "Potion V" 
+AND p.ID_POTION = c.ID_POTION 
+AND i.ID_INGREDIENT = c.ID_INGREDIENT
+
+-- 7) Nom du ou des villageois qui ont pris le plus de casques dans la bataille 'Babaorum'
+SELECT v.NOM, qte
+FROM villageois v, bataille b, prise_casque pc
+WHERE b.NOM_BATAILLE ='Babaorum'
+AND pc.ID_BATAILLE = b.ID_BATAILLE
+AND v.ID_VILLAGEOIS = pc.ID_VILLAGEOIS
+GROUP BY v.NOM
+ORDER BY qte desc
+
+-- 8) Nom des villageois et la quantité de potion bue (en les classant du plus grand buveur au plus
+-- petit)
+SELECT v.NOM, sum(b.DOSE) AS Quantité
+FROM villageois v, boit b
+WHERE v.ID_VILLAGEOIS = b.ID_VILLAGEOIS
+GROUP BY v.NOM
+ORDER BY Quantité desc
+
+-- 9) Nom de la bataille où le nombre de casques pris a été le plus important
+SELECT b.NOM_BATAILLE, SUM(p.QTE) AS Quantité
+FROM bataille b, prise_casque p
+WHERE b.ID_BATAILLE = p.ID_BATAILLE
+GROUP BY b.NOM_BATAILLE
+ORDER BY Quantité DESC
+LIMIT 1
+
+-- 10) Combien existe-t-il de casques de chaque type et quel est leur coût total ? (classés par nombre
+-- décroissant)
+SELECT tc.NOM_TYPE_CASQUE AS nom, COUNT(c.ID_TYPE_CASQUE) AS nombre, SUM(c.COUT_CASQUE) AS cout
+FROM type_casque tc, casque c
+WHERE c.ID_TYPE_CASQUE = tc.ID_TYPE_CASQUE
+GROUP BY nom
+
+-- 11) Noms des potions dont un des ingrédients est la cerise
+SELECT p.NOM_POTION AS nom
+FROM potion p, compose c, ingredient i
+WHERE c.ID_POTION = p.ID_POTION
+AND c.ID_INGREDIENT = i.ID_INGREDIENT
+AND i.NOM_INGREDIENT = 'cerise'
+GROUP BY nom
+
+-- 12) Nom du / des village(s) possédant le plus d'habitants
+SELECT l.NOM_LIEU, COUNT(v.ID_VILLAGEOIS) AS nombre
+FROM lieu l, villageois v
+WHERE l.ID_LIEU = v.ID_LIEU
+GROUP BY l.NOM_LIEU
+ORDER BY nombre DESC
+LIMIT 3
+
+-- 13) Noms des villageois qui n'ont jamais bu de potion
+SELECT v.ID_VILLAGEOIS AS id, v.NOM
+FROM villageois v
+WHERE v.ID_VILLAGEOIS NOT IN (SELECT boit.ID_VILLAGEOIS FROM boit)
+ORDER BY v.ID_VILLAGEOIS asc
+
+-- 14) Noms des villages qui contiennent la particule 'um'
+SELECT l.NOM_LIEU AS nom
+FROM lieu l
+WHERE l.NOM_LIEU LIKE '%um%'
+
+-- 15) Nom du / des villageois qui n'ont pas le droit de boire la potion 'Rajeunissement II'
+SELECT p.NOM_POTION AS potionInterdite, v.NOM
+FROM peut, potion p, villageois v
+WHERE peut.ID_POTION = p.ID_POTION
+AND peut.ID_VILLAGEOIS = v.ID_VILLAGEOIS
+AND p.NOM_POTION = 'Rajeunissement II'
+AND peut.A_LE_DROIT = 0
