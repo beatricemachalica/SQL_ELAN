@@ -506,7 +506,7 @@ WHERE l.ID_LIEU = b.ID_LIEU
 ORDER BY b.DATE_BATAILLE asc
 
 -- 5) Nom des potions + coût de réalisation de la potion (trié par coût décroissant)
-SELECT p.NOM_POTION, sum(i.COUT_INGREDIENT) AS cout
+SELECT p.NOM_POTION, sum(i.COUT_INGREDIENT * c.QTE) AS cout
 FROM potion p, compose c, ingredient i
 WHERE p.ID_POTION = c.ID_POTION
 AND c.ID_INGREDIENT = i.ID_INGREDIENT
@@ -514,19 +514,38 @@ GROUP BY p.NOM_POTION
 ORDER BY cout desc
 
 -- 6) Nom des ingrédients + coût + quantité de chaque ingrédient qui composent la potion 'Potion V'
-SELECT i.NOM_INGREDIENT, c.QTE, i.COUT_INGREDIENT
+SELECT i.NOM_INGREDIENT, i.COUT_INGREDIENT, c.QTE
 FROM ingredient i, potion p, compose c
 WHERE p.NOM_POTION = "Potion V" 
 AND p.ID_POTION = c.ID_POTION 
 AND i.ID_INGREDIENT = c.ID_INGREDIENT
 
 -- 7) Nom du ou des villageois qui ont pris le plus de casques dans la bataille 'Babaorum'
-SELECT v.NOM, pc.QTE
+SELECT v.NOM, SUM(pc.QTE) AS nbCasques
 FROM villageois v, bataille b, prise_casque pc
 WHERE b.NOM_BATAILLE ='Babaorum'
 AND pc.ID_BATAILLE = b.ID_BATAILLE
 AND v.ID_VILLAGEOIS = pc.ID_VILLAGEOIS
-ORDER BY qte desc
+GROUP BY v.NOM
+ORDER BY nbCasques desc
+
+-- avec une vue :
+CREATE VIEW scores_casques_bataille AS
+SELECT v.NOM, b.NOM_BATAILLE, SUM(pc.QTE) AS nbCasques
+FROM villageois v, bataille b, prise_casque pc
+WHERE pc.ID_VILLAGEOIS = v.ID_VILLAGEOIS
+AND pc.ID_BATAILLE = b.ID_BATAILLE
+GROUP BY v.NOM, b.NOM_BATAILLE
+ORDER BY v.NOM
+
+SELECT v.NOM, b.NOM_BATAILLE, SUM(pc.QTE) AS nbCasques
+FROM villageois v, bataille b, prise_casque pc
+WHERE pc.ID_VILLAGEOIS = v.ID_VILLAGEOIS
+AND pc.ID_BATAILLE = b.ID_BATAILLE
+GROUP BY v.NOM, b.NOM_BATAILLE
+HAVING nbCasques = (SELECT MAX(sc.nbCasques)
+	FROM scores_casques_bataille sc
+	WHERE sc.NOM_BATAILLE = 'Babaorum')
 
 -- 8) Nom des villageois et la quantité de potion bue (en les classant du plus grand buveur au plus
 -- petit)
