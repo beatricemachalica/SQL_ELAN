@@ -547,6 +547,18 @@ HAVING nbCasques = (SELECT MAX(sc.nbCasques)
 	FROM scores_casques_bataille sc
 	WHERE sc.NOM_BATAILLE = 'Babaorum')
 
+-- avec un ALL
+SELECT v.NOM, SUM(pc.QTE) AS total
+FROM villageois v, bataille b, prise_casque pc
+WHERE pc.ID_BATAILLE = b.ID_BATAILLE
+AND v.ID_VILLAGEOIS = pc.ID_VILLAGEOIS
+GROUP BY v.NOM
+HAVING total >= ALL (SELECT SUM(qte)
+	FROM prise_casque pc, bataille b
+	WHERE pc.ID_BATAILLE = b.ID_BATAILLE
+	AND b.NOM_BATAILLE = 'Babaorum'
+	GROUP BY pc.ID_VILLAGEOIS)
+
 -- 8) Nom des villageois et la quantité de potion bue (en les classant du plus grand buveur au plus
 -- petit)
 SELECT v.NOM, sum(b.DOSE) AS Quantité
@@ -556,12 +568,36 @@ GROUP BY v.NOM
 ORDER BY Quantité desc
 
 -- 9) Nom de la bataille où le nombre de casques pris a été le plus important
-SELECT b.NOM_BATAILLE, SUM(p.QTE) AS Quantite
-FROM bataille b, prise_casque p
-WHERE b.ID_BATAILLE = p.ID_BATAILLE
+SELECT b.NOM_BATAILLE, SUM(pc.QTE) AS Quantite
+FROM bataille b, prise_casque pc
+WHERE b.ID_BATAILLE = pc.ID_BATAILLE
 GROUP BY b.NOM_BATAILLE
-ORDER BY Quantité DESC
-LIMIT 1
+ORDER BY Quantite DESC
+
+-- avec une vue
+CREATE VIEW scores_bataille AS
+SELECT b.NOM_BATAILLE, SUM(pc.QTE) AS Quantite
+FROM bataille b, prise_casque pc
+WHERE b.ID_BATAILLE = pc.ID_BATAILLE
+GROUP BY b.NOM_BATAILLE
+ORDER BY Quantite DESC
+
+SELECT b.NOM_BATAILLE, SUM(pc.QTE) AS Quantite
+FROM bataille b, prise_casque pc
+WHERE b.ID_BATAILLE = pc.ID_BATAILLE
+GROUP BY b.NOM_BATAILLE
+HAVING Quantite = (SELECT MAX(Quantite)
+	FROM scores_bataille sc)
+
+-- avec ALL
+SELECT b.NOM_BATAILLE, SUM(pc.QTE) AS total
+FROM bataille b, prise_casque pc
+WHERE pc.ID_BATAILLE = b.ID_BATAILLE
+GROUP BY b.NOM_BATAILLE
+HAVING total >= ALL (SELECT SUM(qte)
+	FROM prise_casque pc, bataille b
+	WHERE pc.ID_BATAILLE = b.ID_BATAILLE
+	GROUP BY b.NOM_BATAILLE)
 
 -- 10) Combien existe-t-il de casques de chaque type et quel est leur coût total ? (classés par nombre
 -- décroissant)
@@ -585,6 +621,21 @@ WHERE l.ID_LIEU = v.ID_LIEU
 GROUP BY l.NOM_LIEU
 ORDER BY nombre DESC
 LIMIT 3
+
+-- avec une vue
+CREATE VIEW village_population AS
+SELECT l.NOM_LIEU, COUNT(v.ID_VILLAGEOIS) AS population
+FROM lieu l, villageois v
+WHERE l.ID_LIEU = v.ID_LIEU
+GROUP BY l.NOM_LIEU
+ORDER BY population DESC
+
+SELECT l.NOM_LIEU, COUNT(v.ID_VILLAGEOIS) AS population
+FROM lieu l, villageois v
+WHERE l.ID_LIEU = v.ID_LIEU
+GROUP BY l.NOM_LIEU
+HAVING population = (SELECT MAX(population)
+	FROM village_population)
 
 -- 13) Noms des villageois qui n'ont jamais bu de potion
 SELECT v.ID_VILLAGEOIS AS id, v.NOM
