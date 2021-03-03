@@ -462,7 +462,14 @@ SELECT COUNT(v.NOM) AS NombreGaulois, l.NOM_LIEU
 FROM villageois v, lieu l
 WHERE v.ID_LIEU = l.ID_LIEU
 GROUP BY v.ID_LIEU
-ORDER BY NombreGaulois
+ORDER BY NombreGaulois desc
+
+-- avec INNER JOIN
+SELECT COUNT(v.NOM) AS NombreGaulois, l.NOM_LIEU
+FROM villageois v INNER JOIN lieu l
+ON v.ID_LIEU = l.ID_LIEU
+GROUP BY v.ID_LIEU
+ORDER BY NombreGaulois desc
 
 -- 2) Nom des gaulois + spécialité + village
 SELECT v.NOM, s.NOM_SPECIALITE, l.NOM_LIEU
@@ -470,16 +477,30 @@ FROM villageois v, specialite s, lieu l
 WHERE v.ID_LIEU = l.ID_LIEU
 AND s.ID_SPECIALITE = v.ID_SPECIALITE
 
+-- avec INNER JOIN
+SELECT v.NOM, s.NOM_SPECIALITE, l.NOM_LIEU
+FROM villageois v INNER JOIN specialite s
+ON v.ID_SPECIALITE = s.ID_SPECIALITE
+INNER JOIN lieu l
+ON v.ID_LIEU = l.ID_LIEU
+
 -- 3) Nom des spécialités avec nombre de gaulois par spécialité (trié par nombre de gaulois
 -- décroissant)
 SELECT COUNT(v.NOM) AS NombreGaulois, s.NOM_SPECIALITE
 FROM villageois v, specialite s
 WHERE v.ID_SPECIALITE = s.ID_SPECIALITE
-GROUP BY v.ID_SPECIALITE
+GROUP BY s.NOM_SPECIALITE
+ORDER BY NombreGaulois DESC
+
+-- avec INNER JOIN
+SELECT COUNT(v.NOM) AS NombreGaulois, s.NOM_SPECIALITE
+FROM villageois v INNER JOIN specialite s
+ON v.ID_SPECIALITE = s.ID_SPECIALITE
+GROUP BY s.NOM_SPECIALITE
 ORDER BY NombreGaulois DESC
 
 -- 4) Nom des batailles + lieu de la plus récente à la plus ancienne (dates au format jj/mm/aaaa)
-SELECT b.NOM_BATAILLE, l.NOM_LIEU
+SELECT b.NOM_BATAILLE, l.NOM_LIEU, DATE_FORMAT(DATE_BATAILLE, "%d/%m/%Y")
 FROM bataille b, lieu l
 WHERE l.ID_LIEU = b.ID_LIEU
 ORDER BY b.DATE_BATAILLE asc
