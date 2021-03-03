@@ -500,12 +500,11 @@ AND p.ID_POTION = c.ID_POTION
 AND i.ID_INGREDIENT = c.ID_INGREDIENT
 
 -- 7) Nom du ou des villageois qui ont pris le plus de casques dans la bataille 'Babaorum'
-SELECT v.NOM, qte
+SELECT v.NOM, pc.QTE
 FROM villageois v, bataille b, prise_casque pc
 WHERE b.NOM_BATAILLE ='Babaorum'
 AND pc.ID_BATAILLE = b.ID_BATAILLE
 AND v.ID_VILLAGEOIS = pc.ID_VILLAGEOIS
-GROUP BY v.NOM
 ORDER BY qte desc
 
 -- 8) Nom des villageois et la quantité de potion bue (en les classant du plus grand buveur au plus
@@ -517,7 +516,7 @@ GROUP BY v.NOM
 ORDER BY Quantité desc
 
 -- 9) Nom de la bataille où le nombre de casques pris a été le plus important
-SELECT b.NOM_BATAILLE, SUM(p.QTE) AS Quantité
+SELECT b.NOM_BATAILLE, SUM(p.QTE) AS Quantite
 FROM bataille b, prise_casque p
 WHERE b.ID_BATAILLE = p.ID_BATAILLE
 GROUP BY b.NOM_BATAILLE
