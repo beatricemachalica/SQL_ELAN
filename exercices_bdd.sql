@@ -561,11 +561,11 @@ HAVING total >= ALL (SELECT SUM(qte)
 
 -- 8) Nom des villageois et la quantité de potion bue (en les classant du plus grand buveur au plus
 -- petit)
-SELECT v.NOM, sum(b.DOSE) AS Quantité
+SELECT v.NOM, sum(b.DOSE) AS Quantite
 FROM villageois v, boit b
 WHERE v.ID_VILLAGEOIS = b.ID_VILLAGEOIS
 GROUP BY v.NOM
-ORDER BY Quantité desc
+ORDER BY Quantite desc
 
 -- 9) Nom de la bataille où le nombre de casques pris a été le plus important
 SELECT b.NOM_BATAILLE, SUM(pc.QTE) AS Quantite
@@ -637,11 +637,28 @@ GROUP BY l.NOM_LIEU
 HAVING population = (SELECT MAX(population)
 	FROM village_population)
 
+-- avec ALL
+SELECT l.NOM_LIEU, COUNT(v.ID_LIEU) AS nb_habitants
+FROM villageois v, lieu l
+WHERE v.ID_LIEU = l.ID_LIEU
+GROUP BY l.NOM_LIEU
+HAVING nb_habitants >= ALL (SELECT COUNT(v.ID_LIEU)
+			FROM villageois v, lieu l
+			WHERE v.ID_LIEU = l.ID_LIEU
+			GROUP BY v.ID_LIEU)
+
 -- 13) Noms des villageois qui n'ont jamais bu de potion
 SELECT v.ID_VILLAGEOIS AS id, v.NOM
 FROM villageois v
 WHERE v.ID_VILLAGEOIS NOT IN (SELECT boit.ID_VILLAGEOIS FROM boit)
 ORDER BY v.ID_VILLAGEOIS asc
+
+-- avec LEFT JOIN
+SELECT v.nom 
+FROM villageois v
+LEFT JOIN boit 
+ON v.ID_VILLAGEOIS = boit.ID_VILLAGEOIS 
+WHERE boit.ID_VILLAGEOIS IS NULL
 
 -- 14) Noms des villages qui contiennent la particule 'um'
 SELECT l.NOM_LIEU AS nom
@@ -654,4 +671,5 @@ FROM peut, potion p, villageois v
 WHERE peut.ID_POTION = p.ID_POTION
 AND peut.ID_VILLAGEOIS = v.ID_VILLAGEOIS
 AND p.NOM_POTION = 'Rajeunissement II'
-AND peut.A_LE_DROIT = 0
+AND peut.A_LE_DROIT = FALSE
+-- on peut mettre aussi 0 à la place de FALSE
